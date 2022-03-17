@@ -1,0 +1,20 @@
+{
+  "name": "group_project",
+  "version": "1.0.0",
+  "description": "DM group project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  },
+  "dependencies": {
+    "ejs": "^3.1.6",
+    "express": "^4.17.3",
+    "gitignore": "^0.7.0"
+  }
+}
