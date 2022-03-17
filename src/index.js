@@ -9,6 +9,11 @@ fetch('http://localhost:3000/xmldata-api')
 
 var xml_data;
 var xmlDom;
+var ddlDB = document.getElementById("ddlDatabase");
+var ddlEntities = document.getElementById('ddlEntities');
+var ddlAttributesCheckBox = document.getElementById('ddlAttributesCheckBox');
+
+var selectedAttributes = new Set();
 
 function setup(){
     xml_data = document.getElementById("xmlDoc").textContent;
@@ -24,9 +29,6 @@ function setup(){
     }
 }
 
-var ddlDB = document.getElementById("ddlDatabase");
-var ddlEntities = document.getElementById('ddlEntities');
-var ddlAttributes = document.getElementById('ddlAttributes');
 
 function removeOptions(select){
     var length = select.options.length;
@@ -38,7 +40,8 @@ function removeOptions(select){
 function PopulateDatabase() {
     removeOptions(ddlDB);
     removeOptions(ddlEntities);
-    removeOptions(ddlAttributes);
+    document.getElementById('rightColumnDiv').innerHTML = "";
+    
     var global_schema = xmlDom.getElementsByTagName("global_schema");
 
     for (var i = 0; i < global_schema.length; i++) {
@@ -54,7 +57,8 @@ function PopulateDatabase() {
 
 function PopulateEntities(){
     removeOptions(ddlEntities);
-    removeOptions(ddlAttributes);
+    document.getElementById('rightColumnDiv').innerHTML = "";
+
     var global_schema = xmlDom.getElementsByTagName("global_schema");
 
     for (var i = 0; i < global_schema.length; i++) {
@@ -72,8 +76,10 @@ function PopulateEntities(){
 }
 
 function PopulateAttributes(){
-    removeOptions(ddlAttributes);
+    document.getElementById('rightColumnDiv').innerHTML = "";
+
     var global_schema = xmlDom.getElementsByTagName("global_schema");
+    var container = document.getElementById('rightColumnDiv');
 
     for (var i = 0; i < global_schema.length; i++) {
         if(global_schema[i].getElementsByTagName("global_schema_id")[0].textContent == ddlDB.value){
@@ -84,13 +90,45 @@ function PopulateAttributes(){
                     var attribute = entities[j].getElementsByTagName("attribute");
 
                     for(var k = 0;k < attribute.length;k++){
-                        var option = document.createElement("option");
-                        option.text = attribute[k].getElementsByTagName("name")[0].textContent;
-                        option.value = attribute[k].getElementsByTagName("name")[0].textContent;
-                        ddlAttributes.options.add(option);
+                        var checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.name = attribute[k].getElementsByTagName("name")[0].textContent;
+                        checkbox.value = attribute[k].getElementsByTagName("name")[0].textContent;
+                    
+                        var label = document.createElement('label')
+                        label.htmlFor = attribute[k].getElementsByTagName("name")[0].textContent;
+                        label.appendChild(document.createTextNode(attribute[k].getElementsByTagName("name")[0].textContent));
+                    
+                        var br = document.createElement('br');
+                        container.appendChild(checkbox);
+                        container.appendChild(label);
+                        container.appendChild(br);
                     }
                 }
             }
         }
     }
+
+    let btn = document.createElement("button");
+    btn.innerHTML = "Add";
+    btn.style.marginTop = "30px";
+    btn.onclick = function() {addAttributeToList()};
+    container.appendChild(btn);
+}
+
+function addAttributeToList(){
+    var childCB = document.getElementById('rightColumnDiv').getElementsByTagName('input');
+    var curr
+
+    for( i=0; i< childCB.length; i++ ){
+        if(childCB[i].checked){
+            var temp = ddlDB.value + '.' + ddlEntities.value + '.' + childCB[i].name;
+            if(!selectedAttributes.has(temp)){
+                selectedAttributes.add(temp);
+                document.getElementById('attributesDisplayDiv').innerHTML += childCB[i].name + " ";
+            }
+        }
+    }
+
+    console.log(selectedAttributes);
 }
