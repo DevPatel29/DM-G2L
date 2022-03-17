@@ -1,0 +1,23 @@
+ticket_type_id,ticket_type_name,status,notes
+1,Adult,ACTIVE,Adult
+2,Child,ACTIVE,Child
+3,Sr. Citizen,ACTIVE,Sr. Citizen
+4,Heavy Weight,ACTIVE,Heavy Weight
+5,Light Weight,ACTIVE,Light Weight
+6,News Paper,ACTIVE,News Paper
+7,TV Electrical ,ACTIVE,TV Electrical 
+8,Pet Bird,ACTIVE,Pet Bird
+9,Pet Dog,ACTIVE,Pet Dog
+10,Status Report,ACTIVE,Status Report
+11,Inspection Report,ACTIVE,Inspection Report
+12,Book Case,ACTIVE,Inspection Report
+13,Stage Close,ACTIVE,Stage Close
+14,Trip Close,ACTIVE,Trip Close
+15,Trip Cancel,ACTIVE,Trip Cancel
+16,Pass,ACTIVE,Pass
+17,Daily Pass,ACTIVE,Daily Pass
+18,Monthly Pass,ACTIVE,Monthly Pass
+19,Student Pass,ACTIVE,Student Pass
+20,Special Pass Ticket,ACTIVE,Special Pass Ticket
+21,Toll Pass Ticket,ACTIVE,Toll Pass Ticket
+22,Trip Start,ACTIVE,Trip Start

@@ -12,7 +12,6 @@ var xmlDom;
 
 function setup(){
     xml_data = document.getElementById("xmlDoc").textContent;
-    console.log(xml_data);
 
     if (window.DOMParser) {
         parser = new DOMParser();
@@ -61,8 +60,6 @@ function PopulateEntities(){
     for (var i = 0; i < global_schema.length; i++) {
         if(global_schema[i].getElementsByTagName("global_schema_id")[0].textContent == ddlDB.value){
             var entities = global_schema[i].getElementsByTagName("entity");
-
-            console.log(entities.length);
 
             for(var j=0; j < entities.length; j++){
                 var option = document.createElement("option");
