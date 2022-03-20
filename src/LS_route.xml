@@ -1,0 +1,23 @@
+<data>
+    <manifest>
+        <type>relational_data</type>
+        <description>
+            <static>
+                <source_api>./resources/route</source_api>
+            </static>
+        </description>
+    </manifest>
+
+    <metadata>
+        <entity_count>2</entity_count>
+        <entity>
+            <eid>gs2eid1</eid>
+            <data_source>/route.csv</data_source>
+        </entity>
+
+        <entity>
+            <eid>gs2eid2</eid>
+            <data_source>/route_timings.csv</data_source>
+        </entity>
+    </metadata>
+</data>

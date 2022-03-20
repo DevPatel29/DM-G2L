@@ -5,14 +5,17 @@
         <entity>
             <ename>lat_long_stops</ename>
             <eid>gs1eid1</eid>
+            <ls_path>/LS_gis</ls_path>
             <attribute>
                 <name>stop</name>
                 <type>string</type>
             </attribute>
+
             <attribute>
                 <name>lat</name>
                 <type>decimal</type>
             </attribute>
+
             <attribute>
                 <name>long</name>
                 <type>decimal</type>
@@ -26,6 +29,7 @@
         <entity>
             <ename>route</ename>
             <eid>gs2eid1</eid>
+            <ls_path>/LS_route</ls_path>
             <attribute>
                 <name>route_id</name>
                 <type>integer</type>
@@ -43,6 +47,7 @@
         <entity>
             <ename>route_timings</ename>
             <eid>gs2eid2</eid>
+            <ls_path>/LS_route</ls_path>
             <attribute>
                 <name>route_no</name>
                 <type>string</type>

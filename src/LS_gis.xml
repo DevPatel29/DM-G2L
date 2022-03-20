@@ -1,0 +1,18 @@
+<data>
+    <manifest>
+        <type>relational_data</type>
+        <description>
+            <static>
+                <source_api>./resources/gis</source_api>
+            </static>
+        </description>
+    </manifest>
+
+    <metadata>
+        <entity_count>1</entity_count>
+        <entity>
+            <eid>gs1eid1</eid>
+            <data_source>/lat_long_stops.csv</data_source>
+        </entity>
+    </metadata>
+</data>
