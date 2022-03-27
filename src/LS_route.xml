@@ -1,6 +1,6 @@
 <data>
     <manifest>
-        <type>relational_data</type>
+        <type>CSV_data</type>
         <description>
             <static>
                 <source_api>./resources/route</source_api>

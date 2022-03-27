@@ -1,9 +1,11 @@
 <data>
     <manifest>
-        <type>relational_data</type>
+        <type>SQL_data</type>
         <description>
             <static>
-                <source_api>./resources/gis</source_api>
+                <id>root</id>
+                <password>lenovo2691</password>
+                <source_api>gis</source_api>
             </static>
         </description>
     </manifest>

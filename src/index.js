@@ -53,7 +53,6 @@ function PopulateDatabase() {
         var option = document.createElement("option");
 
         option.text = global_schema[i].getElementsByTagName("global_schema_name")[0].textContent;
-
         option.value = global_schema[i].getElementsByTagName("global_schema_id")[0].textContent;
 
         ddlDB.options.add(option);
@@ -133,9 +132,39 @@ function addAttributesToList(){
 
 async function showTable(){
     document.getElementById('tableDisplayDiv').innerHTML = "";
-    var ls_text = await get_local_schema();
-    var ls = get_XML_Dom_object(ls_text);
+    var lsText = await get_local_schema();
+    var ls = get_XML_Dom_object(lsText);
 
+    if(ls.getElementsByTagName("manifest")[0].getElementsByTagName("type")[0].textContent == "CSV_data"){
+        ProcessCSV(ls);
+    }
+    else if(ls.getElementsByTagName("manifest")[0].getElementsByTagName("type")[0].textContent == "SQL_data"){
+        ProcessSQL(ls);
+    }
+}
+
+async function get_local_schema(){
+    var ls_path;
+    for (var i = 0; i < global_schema.length; i++) {
+        if(global_schema[i].getElementsByTagName("global_schema_id")[0].textContent == ddlDB.value){
+            var entities = global_schema[i].getElementsByTagName("entity");
+
+            for(var j = 0;j < entities.length;j++){
+                if(entities[j].getElementsByTagName("eid")[0].textContent == ddlEntities.value){
+                    ls_path = entities[j].getElementsByTagName("ls_path")[0].textContent;    
+                }
+            }
+        }
+    }
+
+    var data = await fetch(ls_path)
+                        .then(response => {return response.json()});
+    var lsText = data.text;
+
+    return lsText;
+}
+
+async function ProcessCSV(ls){
     var path = ls.getElementsByTagName("manifest")[0].getElementsByTagName("description")[0].getElementsByTagName("static")[0].getElementsByTagName("source_api")[0].textContent;
     var entity = ls.getElementsByTagName("metadata")[0].getElementsByTagName("entity");
     for(var i=0;i<entity.length;i++){
@@ -155,31 +184,36 @@ async function showTable(){
     const data = await fetch('/csvdata-api',options)
                        .then(response => {return response.json()})
 
-    const tableData = processData(data.text);
-    createTable(tableData.header, tableData.lines);
+    CreateTableFromJson(data);
 }
 
-function processData(allText) {
-    var allTextLines = allText.split(/\r\n|\n/);
-    var header = allTextLines[0].split(',');
-    var lines = [];
+async function ProcessSQL(ls){
+    var id = ls.getElementsByTagName("manifest")[0].getElementsByTagName("description")[0].getElementsByTagName("static")[0].getElementsByTagName("id")[0].textContent;
+    var password = ls.getElementsByTagName("manifest")[0].getElementsByTagName("description")[0].getElementsByTagName("static")[0].getElementsByTagName("password")[0].textContent;
+    var dbName = ls.getElementsByTagName("manifest")[0].getElementsByTagName("description")[0].getElementsByTagName("static")[0].getElementsByTagName("source_api")[0].textContent;
+    var tableName = ddlEntities.textContent;
+    
+    const login = {"id":id, "password":password, "dbName":dbName, "tableName":tableName};
 
-    for (var i=1; i<allTextLines.length; i++) {
-        var data = allTextLines[i].split(',');
-        if (data.length == header.length) {
+    const options = {
+        method : 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(login)
+    };
 
-            var tarr = [];
-            for (var j=0; j<header.length; j++) {
-                tarr.push(data[j]);
-            }
-            lines.push(tarr);
-        }
+    const data = await fetch('/sqldata-api',options)
+                       .then(response => {return response.json()});
+    CreateTableFromJson(data);
+}
+
+function CreateTableFromJson(data){
+    var tableHeader = [];
+    for(var k in data[0]){
+        tableHeader.push(k);
     }
 
-    return {header, lines};
-}
-
-function createTable(tableHeader, tableData){
     var table = document.createElement('table');
     table.id = "displayTable";
     var tableBody = document.createElement('tbody');
@@ -204,42 +238,24 @@ function createTable(tableHeader, tableData){
 
         tableBody.appendChild(row);
     }
-  
-    tableData.forEach(function(rowData) {
-        var row = document.createElement('tr');
 
-        for(var i=0;i<rowData.length;i++){
+    data.forEach(function(rowData) {
+        var row = document.createElement('tr');
+        var i = 0;
+        for(var k in rowData){
             if(anyBoxesChecked[i]){
                 var cell = document.createElement('td');
-                cell.appendChild(document.createTextNode(rowData[i]));
+                cell.appendChild(document.createTextNode(rowData[k]));
                 row.appendChild(cell);
             }
+            i+=1;
         }
     
         tableBody.appendChild(row);
     });
-  
+
     table.appendChild(tableBody);
     document.getElementById('tableDisplayDiv').appendChild(table);
 }
 
-async function get_local_schema(){
-    var ls_path;
-    for (var i = 0; i < global_schema.length; i++) {
-        if(global_schema[i].getElementsByTagName("global_schema_id")[0].textContent == ddlDB.value){
-            var entities = global_schema[i].getElementsByTagName("entity");
 
-            for(var j = 0;j < entities.length;j++){
-                if(entities[j].getElementsByTagName("eid")[0].textContent == ddlEntities.value){
-                    ls_path = entities[j].getElementsByTagName("ls_path")[0].textContent;    
-                }
-            }
-        }
-    }
-
-    var data = await fetch(ls_path)
-                        .then(response => {return response.json()});
-    var ls_text = data.text;
-
-    return ls_text;
-}
