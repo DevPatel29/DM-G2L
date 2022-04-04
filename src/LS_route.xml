@@ -1,5 +1,7 @@
 <data>
     <manifest>
+        <data_source_name>route</data_source_name>
+        <data_source_id>dsid2</data_source_id>
         <type>CSV_data</type>
         <description>
             <static>
@@ -9,15 +11,20 @@
     </manifest>
 
     <metadata>
-        <entity_count>2</entity_count>
+        <entity_count>3</entity_count>
         <entity>
-            <eid>gs2eid1</eid>
+            <eid>eid1</eid>
             <data_source>/route.csv</data_source>
         </entity>
 
         <entity>
-            <eid>gs2eid2</eid>
+            <eid>eid2</eid>
             <data_source>/route_timings.csv</data_source>
+        </entity>
+
+        <entity>
+            <eid>eid3</eid>
+            <data_source>/route_stop_normalized.csv</data_source>
         </entity>
     </metadata>
 </data>

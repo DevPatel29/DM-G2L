@@ -1,10 +1,10 @@
 <data>
     <global_schema>
         <global_schema_name>gis</global_schema_name>
-        <global_schema_id>gs1</global_schema_id>
+        <global_schema_id>dsid1</global_schema_id>
         <entity>
             <ename>lat_long_stops</ename>
-            <eid>gs1eid1</eid>
+            <eid>eid1</eid>
             <ls_path>/LS_gis</ls_path>
             <attribute>
                 <name>stop</name>
@@ -25,10 +25,10 @@
 
     <global_schema>
         <global_schema_name>route</global_schema_name>
-        <global_schema_id>gs2</global_schema_id>
+        <global_schema_id>dsid2</global_schema_id>
         <entity>
             <ename>route</ename>
-            <eid>gs2eid1</eid>
+            <eid>eid1</eid>
             <ls_path>/LS_route</ls_path>
             <attribute>
                 <name>route_id</name>
@@ -46,7 +46,7 @@
 
         <entity>
             <ename>route_timings</ename>
-            <eid>gs2eid2</eid>
+            <eid>eid2</eid>
             <ls_path>/LS_route</ls_path>
             <attribute>
                 <name>route_no</name>
@@ -58,6 +58,20 @@
             </attribute>
             <attribute>
                 <name>origin</name>
+                <type>string</type>
+            </attribute>
+        </entity>
+
+        <entity>
+            <ename>route_stop_normalized</ename>
+            <eid>eid3</eid>
+            <ls_path>/LS_route</ls_path>
+            <attribute>
+                <name>busstop</name>
+                <type>string</type>
+            </attribute>
+            <attribute>
+                <name>route_no</name>
                 <type>string</type>
             </attribute>
         </entity>

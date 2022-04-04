@@ -1,5 +1,7 @@
 <data>
     <manifest>
+        <data_source_name>gis</data_source_name>
+        <data_source_id>dsid1</data_source_id>
         <type>SQL_data</type>
         <description>
             <static>
@@ -13,7 +15,7 @@
     <metadata>
         <entity_count>1</entity_count>
         <entity>
-            <eid>gs1eid1</eid>
+            <eid>eid1</eid>
             <data_source>/lat_long_stops.csv</data_source>
         </entity>
     </metadata>
