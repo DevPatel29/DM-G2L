@@ -16,6 +16,7 @@
         <entity_count>1</entity_count>
         <entity>
             <eid>eid1</eid>
+            <ename>lat_long_stops</ename>
             <data_source>/lat_long_stops.csv</data_source>
         </entity>
     </metadata>
