@@ -1,0 +1,30 @@
+<data>
+    <manifest>
+        <data_source_name>other_details</data_source_name>
+        <data_source_id>dsid3</data_source_id>
+        <type>CSV_data</type>
+        <description>
+            <static>
+                <source_api>./resources/other_details</source_api>
+            </static>
+        </description>
+    </manifest>
+
+    <metadata>
+        <entity_count>3</entity_count>
+        <entity>
+            <eid>eid1</eid>
+            <data_source>/veh_device.csv</data_source>
+        </entity>
+
+        <entity>
+            <eid>eid2</eid>
+            <data_source>/route_vehicle_details.csv</data_source>
+        </entity>
+
+        <entity>
+            <eid>eid3</eid>
+            <data_source>/schedule_details.csv</data_source>
+        </entity>
+    </metadata>
+</data>

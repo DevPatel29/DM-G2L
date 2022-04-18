@@ -7,46 +7,70 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 </head>
 <body>
-    
     <div class="row">
         <div class="column" style="background-color:#FFB695;">
-            <input type="button" id="btnGenerate" value="Populate Database" onclick="PopulateDatabase()" />
             <hr/>
-            <select id="ddlDatabase"></select>
+            <label for="ddlDatabase" style="margin-right: 1em;">Data Source:</label>
+            <select id="ddlDatabase" onchange="PopulateEntities()"></select>
 
             <p style="margin-bottom:2cm"></p>
-            <input type="button" id="btnGenerate" value="Populate Entities" onclick="PopulateEntities()" />
             <hr/>
-            <select id="ddlEntities"></select>
+            <label for="ddlEntities" style="margin-right: 1em;">Entities:</label>
+            <select id="ddlEntities" onchange="PopulateAttributes()"></select>
 
             <p style="margin-bottom:2cm"></p>
-            <input type="button" id="btnGenerate" value="Populate Attributes" onclick="PopulateAttributes()" />
         </div>
 
-
-        <div class="column" style="background-color:#96D1CD;" id="rightColumnDiv">
-            
+        <div class="column" style="background-color:#96D1CD;">
+            <p>Attributes:</p>
+            <div id="rightColumnDiv" style="padding: 10px;"></div>
         </div>
     </div>
     
-    <div style="background-color: bisque;" id="attributesDisplayDiv"></div>
-
+    
+    <!-- Predicate Selecection Part -->
     <div style="background-color: rgb(238, 183, 117);" id="predicateDisplayDiv">
-        <input type="button" id="btnGenerate" value="Populate Predicate" onclick="PopulatePredicate()" />
-        <hr/>
-        <select id="ddlPredicate" onclick="PredicateSelected()"></select>
-        <div id="predicateLogicDisplayDiv">
-            
-        </div>
+        <label for="ddlPredicate-boolOperator">Bool Operator:</label>
+        <select id="ddlPredicate-boolOperator" style="margin-right: 2em;">
+            <option label="And">And</option>
+            <option label="Or">Or</option>
+        </select>
+
+
+        <label for="ddlPredicate">Predicate:</label>
+        <select id="ddlPredicate" style="margin-right: 2em;"></select>
+
+        <label for="ddlPredicate-relational">Relational Operators:</label>
+        <select id="ddlPredicate-relational"  style="margin-right: 2em;">
+            <option label="&lt">lessThan</option>
+            <option label="&gt">greaterThan</option>
+            <option label="==">equalTo</option>
+        </select>
+
+        <br /> 
+        <label for="ddlPredicateValue">Value:</label>
+        <input id="ddlPredicateValue" size="30" style="margin-top: 4em;"></input>
+
+        <br></br>
+        <input type="button" value="Add Predicate" onclick="AddPredicate()" />
+        
     </div>
 
+
+    <!-- Selected Attributes Display -->
+    <div style="background-color: bisque;" id="attributesDisplayDiv"></div>
+
+
+    <!-- Show Table Button -->
     <div>
         <input type="button" id="showTable" value="Show" onclick="showTable()" />
     </div>
 
-    <div id="tableDisplayDiv" style="height:1000px;overflow:auto;">
 
-    </div>
+    <!-- Final table display -->
+    <div id="tableDisplayDiv" style="height:1000px;overflow:auto;"></div>
+
+
 
     <script id="gs_xmlDoc" type="text"></script>
     <script src="https://cdn.jsdelivr.net/npm/alasql@1.7"></script>
