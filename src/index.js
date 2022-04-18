@@ -17,9 +17,23 @@ var global_schema;
 var selectedAttributes = new Set();
 var selectedEntities = new Set();
 
+let all_data = [];
+
+
+let list_dsid_eid = [
+    ["dsid2","eid1"],
+    ["dsid2","eid2"],
+    ["dsid2","eid3"] 
+];
+
+let table_cols_mapping = {
+    "dsid2_eid1" : ["dsid2_eid1_route_id", "dsid2_eid1_route_number", "dsid2_eid1_source_id"],
+    "dsid2_eid2" : ["dsid2_eid2_route_no", "dsid2_eid2_distance", "dsid2_eid2_origin"],
+    "dsid2_eid3" : ["dsid2_eid3_busstop", "dsid2_eid3_route_no"]
+}
 var graph = {
     'dsid2_eid2_route_no' : ['dsid2_eid3_route_no'],
-    'dsid2_eid3_route_no' : ['dsid2_eid2_route_no']
+    'dsid2_eid3_route_no' : ['dsid2_eid2_route_no'],
 };
 
 var attributeType = {};
@@ -212,6 +226,24 @@ function AddPredicate(){
     console.log(predicateConstraint);
 }
 
+async function get_tables(dsID, eID)
+{
+    var lsText = await get_local_schema(dsID,eID);
+    var ls = get_XML_Dom_object(lsText);
+
+    let obj = {};
+    if(ls.getElementsByTagName("manifest")[0].getElementsByTagName("type")[0].textContent == "CSV_data"){
+        const data = await ProcessCSV(ls, eID);
+        obj = {dsID : dsID, eID : eID, data : data};
+    }
+    else if(ls.getElementsByTagName("manifest")[0].getElementsByTagName("type")[0].textContent == "SQL_data"){
+        const data = await ProcessSQL(ls, eID);
+        obj = {dsID : dsID, eID : eID, data : data};
+    }
+    console.log(obj);
+    return obj;
+}
+
 async function showTable(){
     document.getElementById('tableDisplayDiv').innerHTML = "";
 
@@ -220,21 +252,9 @@ async function showTable(){
     for(let ele of selectedEntities){
         const dsID = ele.split("-")[0];
         const eID = ele.split("-")[1];
-
-        var lsText = await get_local_schema(dsID,eID);
-        var ls = get_XML_Dom_object(lsText);
-
-        if(ls.getElementsByTagName("manifest")[0].getElementsByTagName("type")[0].textContent == "CSV_data"){
-            const data = await ProcessCSV(ls, eID);
-            arrayTable.push(data);
-        }
-        else if(ls.getElementsByTagName("manifest")[0].getElementsByTagName("type")[0].textContent == "SQL_data"){
-            const data = await ProcessSQL(ls, eID);
-            arrayTable.push(data);
-        }
+        arrayTable.push(await get_tables(dsID, eID));
     }
-
-    // console.log(arrayTable);
+    console.log(arrayTable);
     ProcessArrayTable(arrayTable);
 }
 
@@ -405,20 +425,115 @@ function validRow(row){
     return true;
 }
 
-// change GetCommonAtt function to dfs function to check if their is any direct or indirect relation between the tables
-function ProcessArrayTable(arrayTable){
-    var res = arrayTable[0];
 
-    for(let i=1;i<arrayTable.length;i++){
-        var commonAtt = GetCommonAtt(res, arrayTable[i]);
-        res = JoinTable(res, arrayTable[i], commonAtt[0], commonAtt[1]);
+function dfs(node, graphObject)
+{
+    console.log(graphObject.visited, node);
+    graphObject.visited[node] = true;
+    for(let i = 0; i < graphObject.graph[node].length; i++)
+    {
+        let x = graphObject.graph[node][i];
+        if(!graphObject.visited[x])
+        {
+            dfs(x, graphObject);
+        }
     }
-    
-    // console.log(res);
-    CreateTableFromJson(res);
 }
 
-function JoinTable(tbl1, tbl2, commonAbb1, commonAbb2){
+function Check_Connectivity(graphObject, arrayTable)
+{
+    // Step 1 : Find the index in list_dsid_eid which corresponds to first element in arrayTable.
+    // Step 2 : Call DFS function from that index to update the visited array in graphObject. 
+    // Step 3 : check if all the dsid_eid in arrayTable are visited in the dfs call from previous step. 
+    console.log(arrayTable);
+    let start_node = -1;
+    for(let i = 0; i < list_dsid_eid.length; i++)
+    {
+        console.log(list_dsid_eid[i]);
+        console.log([arrayTable[0].dsID, arrayTable[0].eID]);
+        if(list_dsid_eid[i][0] == arrayTable[0].dsID && list_dsid_eid[i][1] == arrayTable[0].eID)
+        {
+            start_node = i;
+            break;
+        }
+    }
+    console.log(start_node);    
+    dfs(start_node, graphObject);
+    console.log(graphObject.visited); 
+    let flag = true;
+    for(let i = 0; i < arrayTable.length; i++)
+    {
+        let find_index = -1;
+        for(let j = 0; j < list_dsid_eid.length; j++)
+        {
+            if(arrayTable[i].dsID == list_dsid_eid[j][0] && arrayTable[i].eID == list_dsid_eid[j][1])
+            {
+                find_index = j;
+                break;
+            }
+        }
+        console.log(i, find_index);
+        if(graphObject.visited[find_index] == false)
+            return false;
+        
+    }
+    return true;
+}
+
+function CreateGraphObject()
+{
+    let graph = [];
+    for(let i = 0; i < list_dsid_eid.length ; i++)
+    {
+        let tmp = [];
+        graph.push(tmp);
+    }
+    for(let i = 0; i < list_dsid_eid.length; i++)
+    {
+        for(let j = i + 1; j < list_dsid_eid.length; j++)
+        {
+            let tmp = GetCommonAtt(list_dsid_eid[i],list_dsid_eid[j]);
+            console.log(tmp);
+            if(tmp[0].length > 0)
+            {
+                graph[i].push(j);
+                graph[j].push(i);
+            }
+        }
+    }
+    console.log(graph);
+    graphObject = {"graph" : graph};  
+    graphObject.visited = new Array(graphObject.graph.length).fill(false);
+    console.log(graphObject);
+    return graphObject;  
+}
+
+function DecidePermutation(arrayTable, graphObject)
+{
+    // according to current implementation, it will give the order [0, 1, 2, 3, ...]
+    let ar = new Array(arrayTable.length);
+    for(let i = 0; i < arrayTable.length; i++)
+    {
+        let idx = -1;
+        for(let j = 0; j < list_dsid_eid.length; j++)
+        {
+            if(list_dsid_eid[j][0] == arrayTable[i].dsID && list_dsid_eid[j][1] == arrayTable[i].eID)
+            {
+                idx = j;
+                break;
+            }
+        }
+        console.assert(idx != -1, "Assertion failed");
+        ar[i] = idx;
+    }
+    console.log(ar);
+    return ar;
+}
+
+
+
+
+async function JoinTable(tbl1, tbl2, commonAbb1, commonAbb2){
     var qry = 'SELECT * FROM ? a, ? b where (';
 
     for(let i=0;i<commonAbb1.length;i++){
@@ -429,7 +544,7 @@ function JoinTable(tbl1, tbl2, commonAbb1, commonAbb2){
     }
     qry += ')';
 
-    console.log(qry);
+    console.log(qry, tbl1, tbl2);
     var res = alasql(qry,[tbl1,tbl2]);
     console.log(res);
     return res;
@@ -443,7 +558,7 @@ async function Temp(){
     var tb1 = await ProcessCSV(ls, "eid2");
     var tb2 = await ProcessCSV(ls, "eid3");
 
-    var commonAtt = GetCommonAtt(tb1,tb2);
+    var commonAtt = GetCommonAtt(["dsid2","eid2"],["dsid2","eid3"]);
     JoinTable(tb1, tb2, commonAtt[0], commonAtt[1]);
 
     // var res = alasql('SELECT * FROM ? a, ? b where a.route_no = b.rt_no',[tb1,tb2]);
@@ -451,21 +566,138 @@ async function Temp(){
     // JoinTable(tb1, tb2, ['route_no'], ['route_no']);
 }
 
+
+//Given tbl1 = [dsid, eid], tbl2 = [dsid, eid], find the pk-fk relationship in this 2 tables. 
 function GetCommonAtt(tbl1, tbl2){
-    console.log(tbl1);
+    //TODO : parse from an XML file. 
+    //Currently it is hardcoded.
+
+    
+    
     var com1 = [];
     var com2 = [];
-
-    for(k in tbl1[0]){
-        for(l in tbl2[0]){
-            if(k in graph){
-                if(graph[k].includes(l)){
-                    com1.push(k);
-                    com2.push(l);
-                }
+    let t1 = tbl1[0]+"_"+tbl1[1];
+    let t2 = tbl2[0]+"_"+tbl2[1];
+    for(const i of  table_cols_mapping[t1])
+    {
+        for(const j of table_cols_mapping[t2])
+        { 
+            if((i in graph) && (graph[i].includes(j)))
+            {
+                com1.push(i);
+                com2.push(j);
             }
         }
     }
+    return [com1, com2];
+}
 
-    return [com1,com2];
+async function Load_Data()
+{
+    all_data = [];
+    for(let i = 0; i < list_dsid_eid.length; i++)
+    {
+
+        let tmp = await get_tables(list_dsid_eid[i][0], list_dsid_eid[i][1]);
+        all_data.push(tmp);
+    }
+    console.log(all_data);
+}
+
+
+function dfs2(node, dest, pathObject, graphObject)
+{
+    pathObject.path.push(node);
+    pathObject.visited[node] = true;
+    if(node == dest)
+    {
+        return true;
+    }
+    console.log(node, graphObject);
+    for(let i = 0; i < graphObject.graph[node].length; i++)
+    {
+        let v = graphObject.graph[node][i];
+        if(!pathObject.visited[v])
+        {
+            let flag = dfs2(v, dest, pathObject, graphObject);
+            if(flag)
+            {
+                return true;
+            }
+        }
+    }
+    pathObject.path.pop(node);
+    return false;
+}
+function find_path(u, v, graphObject)
+{
+    let pathObject = {};
+    pathObject.path = [];
+    pathObject.visited = new Array(list_dsid_eid.length).fill(false);
+    dfs2(u, v, pathObject, graphObject);
+    return pathObject.path;
+}
+
+function performJoinAll(permutation, graphObject)
+{
+    let res = all_data[permutation[0]].data;
+    for(let i = 1; i < permutation.length; i++)
+    {
+        let path = find_path(permutation[i-1], permutation[i], graphObject);
+        console.log(permutation[i-1], permutation[i], path);
+        for(let j = 0; j + 1 < path.length; j++)
+        {
+            let common_attributes = GetCommonAtt(list_dsid_eid[path[j]], list_dsid_eid[path[j+1]]);
+            res = JoinTable(res, all_data[path[j+1]].data, common_attributes[0], common_attributes[1]);
+        }
+    }
+    return res;
+}
+
+
+async function ProcessArrayTable(arrayTable){
+    
+    /*
+    Functionality : 
+    1) call CreateGraphObject function to create graph structure
+    2) check if all the nodes are in a single connected component using Check_connectivity function.
+    3) Decide permutation in which tables must be joined. 
+    4) Load all data in the global variable. 
+    5) Join all
+
+    According to current implementation : The order of joins will happen in this order : 
+    res = ArrayTable[0]
+    res = res Path_join ArrayTable[1]
+    res = res Path_join ArrayTable[2]
+    and so on.
+    */
+    
+    console.log(arrayTable);
+    let graphObject = CreateGraphObject(arrayTable); // step 1
+    
+    console.log(graphObject);
+    if(!(Check_Connectivity(graphObject, arrayTable))){ //  step 2
+        console.log("the current selection of tables is not possible");
+        return false;
+    }
+    
+    let permutation = DecidePermutation(arrayTable, graphObject); // step 3
+    
+    await Load_Data(); // step 4
+
+
+    let res = performJoinAll(permutation, graphObject); // step 5
+
+    console.log(res);
+    CreateTableFromJson(res);
+
+
+
+    return res;
+}
+
+function main()
+{   
+    var commonAtt = GetCommonAtt(["dsid2","eid2"],["dsid2","eid3"]);
+    console.log(commonAtt);
 }
