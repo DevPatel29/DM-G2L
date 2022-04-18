@@ -19,22 +19,9 @@ var selectedEntities = new Set();
 
 let all_data = [];
 
-
-let list_dsid_eid = [
-    ["dsid2","eid1"],
-    ["dsid2","eid2"],
-    ["dsid2","eid3"] 
-];
-
-let table_cols_mapping = {
-    "dsid2_eid1" : ["dsid2_eid1_route_id", "dsid2_eid1_route_number", "dsid2_eid1_source_id"],
-    "dsid2_eid2" : ["dsid2_eid2_route_no", "dsid2_eid2_distance", "dsid2_eid2_origin"],
-    "dsid2_eid3" : ["dsid2_eid3_busstop", "dsid2_eid3_route_no"]
-}
-var graph = {
-    'dsid2_eid2_route_no' : ['dsid2_eid3_route_no'],
-    'dsid2_eid3_route_no' : ['dsid2_eid2_route_no'],
-};
+var list_dsid_eid = [];
+var table_cols_mapping = {};
+var graph = {};
 
 var attributeType = {};
 var predicateConstraint = {};
@@ -58,9 +45,53 @@ function get_XML_Dom_object(xml_data){
 function setup(){
     var xml_data = document.getElementById("gs_xmlDoc").textContent;
     global_schema = get_XML_Dom_object(xml_data).getElementsByTagName("global_schema");
-    ExtractAttributeType();
+    ExtractInfo();
+    ExtractGraph();
+    PopulateDatabase();
 }
 
+function ExtractInfo(){
+    for (var i = 0; i < global_schema.length; i++) {
+        var dsid = global_schema[i].getElementsByTagName("global_schema_id")[0].textContent;
+        var entities = global_schema[i].getElementsByTagName("entity");
+
+        for(var j = 0;j < entities.length;j++){
+            var eid = entities[j].getElementsByTagName("eid")[0].textContent;
+
+            list_dsid_eid.push([dsid,eid]);
+            table_cols_mapping[dsid + '_' + eid] = [];
+
+            var attribute = entities[j].getElementsByTagName("attribute");
+            for(var k = 0;k < attribute.length;k++){
+                var attName = attribute[k].getElementsByTagName("name")[0].textContent;
+                var attType = attribute[k].getElementsByTagName("type")[0].textContent;
+                var temp = dsid + "_" + eid + "_" + attName;
+                attributeType[temp] = attType;
+                table_cols_mapping[dsid + '_' + eid].push(temp);
+            }
+        }
+    }
+}
+
+function ExtractGraph(){
+    for (var i = 0; i < global_schema.length; i++) {
+        var entities = global_schema[i].getElementsByTagName("entity");
+        for(var j = 0;j < entities.length;j++){
+            var relations = entities[j].getElementsByTagName("relation");
+            for(var k = 0;k < relations.length;k++){
+                var u = relations[k].getElementsByTagName('ds_1')[0].textContent + "_" + relations[k].getElementsByTagName('ent_1')[0].textContent + '_' + relations[k].getElementsByTagName('att_1')[0].textContent;
+                var v = relations[k].getElementsByTagName('ds_2')[0].textContent + "_" + relations[k].getElementsByTagName('ent_2')[0].textContent + '_' + relations[k].getElementsByTagName('att_2')[0].textContent;
+                if(u in graph){
+                    graph[u].push(v);
+                }
+                else{
+                    graph[u] = [v];
+                }
+            }
+        }
+    }
+    console.log(graph);
+}
 
 function removeOptions(select){
     var length = select.options.length;
@@ -82,6 +113,8 @@ function PopulateDatabase() {
 
         ddlDB.options.add(option);
     }
+
+    PopulateEntities();
 }
 
 function PopulateEntities(){
@@ -100,6 +133,8 @@ function PopulateEntities(){
             }
         }
     }
+
+    PopulateAttributes();
 }
 
 function PopulateAttributes(){
@@ -139,6 +174,8 @@ function PopulateAttributes(){
     btn.style.marginTop = "30px";
     btn.onclick = function() {addAttributesToList()};
     container.appendChild(btn);
+
+    PopulatePredicate();
 }
 
 function addAttributesToList(){
@@ -154,80 +191,57 @@ function addAttributesToList(){
             }
         }
     }
-    // Temp();
 }
 
 function PopulatePredicate(){
     removeOptions(ddlPredicate);
-    for (var it = selectedAttributes.values(), val= null; val=it.next().value; ) {
+    let sel = ddlDB.value + "_" + ddlEntities.value;
+    let selAtt = table_cols_mapping[sel];
+    
+    for(var i=0; i < selAtt.length; i++){
         var option = document.createElement("option");
-        option.text = val;
-        option.value = val;
+        option.text = selAtt[i];
+        option.value = selAtt[i]
         ddlPredicate.options.add(option);
     }
 }
 
-function PredicateSelected(){
-    console.log(ddlPredicate.value, attributeType[ddlPredicate.value]);
-
-    if(attributeType[ddlPredicate.value] == "string"){
-        document.getElementById('predicateLogicDisplayDiv').innerHTML = "";
-
-        $('#predicateLogicDisplayDiv').append(`<input id="predicateValue" size="50"></input>
-                                               <br /> <br />
-                                               <input type="button" value="Add Predicate" onclick="AddPredicate()" />`);
-
-    }
-    else if(attributeType[ddlPredicate.value] == "integer" || attributeType[ddlPredicate.value] == "decimal"){
-        document.getElementById('predicateLogicDisplayDiv').innerHTML = "";
-
-        $('#predicateLogicDisplayDiv').append(` <input id="predicateValueFrom" size="15"></input> 
-                                                <p>To</p>
-                                                <input id="predicateValueTo" size="15"></input> <br /> <br />
-                                                <input type="button" value="Add Predicate" onclick="AddPredicate()" />`);
-    }
-}
-
-function ExtractAttributeType(){
-    for (var i = 0; i < global_schema.length; i++) {
-        var dsid = global_schema[i].getElementsByTagName("global_schema_id")[0].textContent;
-        var entities = global_schema[i].getElementsByTagName("entity");
-
-        for(var j = 0;j < entities.length;j++){
-            var eid = entities[j].getElementsByTagName("eid")[0].textContent;
-            var attribute = entities[j].getElementsByTagName("attribute");
-            for(var k = 0;k < attribute.length;k++){
-                var attName = attribute[k].getElementsByTagName("name")[0].textContent;
-                var attType = attribute[k].getElementsByTagName("type")[0].textContent;
-                var temp = dsid + "_" + eid + "_" + attName;
-                attributeType[temp] = attType;
-            }
-        }
-    }
-}
 
 function AddPredicate(){
-    var selectAtt = ddlPredicate.value;
-    if(attributeType[ddlPredicate.value] == "string"){
-        var pred = document.getElementById("predicateValue");
-        if(pred.value != ""){
-            var values = pred.value.split(",");
-            predicateConstraint[selectAtt] = {type: "string", values : values};
-        }
+    var pred = ddlPredicate.value;
+    var predValue, type;
+    
+    if(attributeType[pred] == "string"){
+        predValue = document.getElementById("ddlPredicateValue").value;
+        type = "string";
     }
-    else if(attributeType[ddlPredicate.value] == "integer" || attributeType[ddlPredicate.value] == "decimal"){
-        var predTo = document.getElementById("predicateValueTo");
-        var predFrom = document.getElementById("predicateValueFrom");
-        console.log(predTo,predFrom);
-        if(predTo.value != "" && predFrom.value != ""){
-            predicateConstraint[selectAtt] = {type: "number", from : parseFloat(predFrom.value), to: parseFloat(predTo.value)};
-        }
+    else if(attributeType[pred] == "integer" || attributeType[pred] == "decimal"){
+        predValue = parseInt(document.getElementById("ddlPredicateValue").value);
+        type = "number";
+    }
+
+    var select = document.getElementById("ddlPredicate-relational");
+    var relOp = select.options[select.selectedIndex].value;
+
+    select = document.getElementById("ddlPredicate-boolOperator");
+    var boolOp = select.options[select.selectedIndex].value;
+
+    if(pred in predicateConstraint){
+        let constraint = predicateConstraint[pred];
+        constraint[relOp].boolOp = boolOp;
+        constraint[relOp].value = predValue;
+        predicateConstraint[pred] = constraint;
+    }
+    else{
+        let constraint = {type:type, lessThan: {boolOp:null, value:null}, greaterThan: {boolOp:null, value:null}, equalTo: {boolOp:null, value:null}};
+        constraint[relOp].boolOp = boolOp;
+        constraint[relOp].value = predValue;
+        predicateConstraint[pred] = constraint;
     }
     console.log(predicateConstraint);
 }
 
-async function get_tables(dsID, eID)
-{
+async function get_tables(dsID, eID){
     var lsText = await get_local_schema(dsID,eID);
     var ls = get_XML_Dom_object(lsText);
 
@@ -255,7 +269,11 @@ async function showTable(){
         arrayTable.push(await get_tables(dsID, eID));
     }
     console.log(arrayTable);
-    ProcessArrayTable(arrayTable);
+    let res = await ProcessArrayTable(arrayTable);
+    console.log(res);
+    if(!res){
+        window.alert("Join table not possible");
+    }
 }
 
 // return array of lsText;
@@ -300,8 +318,6 @@ async function ProcessCSV(ls, eID){
 
     let data = await fetch('/csvdata-api',options)
                        .then(response => {return response.json()})
-
-    // CreateTableFromJson(data);
 
     let pref = ls.getElementsByTagName("manifest")[0].getElementsByTagName("data_source_id")[0].textContent + '_' + eID + '_';
     data = data.map((elm) => {
@@ -358,6 +374,7 @@ async function  ProcessSQL(ls, eID){
 }
 
 function CreateTableFromJson(data){
+    // console.log(data);
     var tableHeader = [];
     for(var k in data[0]){
         tableHeader.push(k);
@@ -410,25 +427,43 @@ function CreateTableFromJson(data){
 }
 
 function validRow(row){
+    let andRes = true;
+    let orRes = false; 
     for(k in row){
-        if( (k in predicateConstraint) && predicateConstraint[k].type == "string"){
-            if(! predicateConstraint[k].values.includes(row[k])){
-                return false;
+        if(k in predicateConstraint){
+            if(predicateConstraint[k].lessThan.boolOp != null){
+                if(predicateConstraint[k].lessThan.boolOp == 'And'){
+                    andRes = andRes & (row[k] < predicateConstraint[k].lessThan.value);
+                }
+                else if(predicateConstraint[k].lessThan.boolOp == 'Or'){
+                    orRes = orRes | (row[k] < predicateConstraint[k].lessThan.value);
+                }
             }
-        }
-        else if( (k in predicateConstraint) && predicateConstraint[k].type == "number"){
-            if(! (predicateConstraint[k].from <= row[k] && row[k] <= predicateConstraint[k].to)){
-                return false;
+            if(predicateConstraint[k].greaterThan.boolOp != null){
+                if(predicateConstraint[k].greaterThan.boolOp == 'And'){
+                    andRes = andRes & (row[k] > predicateConstraint[k].greaterThan.value);
+                }
+                else if(predicateConstraint[k].greaterThan.boolOp == 'Or'){
+                    orRes = orRes | (row[k] > predicateConstraint[k].greaterThan.value);
+                }
+            }
+            if(predicateConstraint[k].equalTo.boolOp != null){
+                if(predicateConstraint[k].equalTo.boolOp == 'And'){
+                    andRes = andRes & (row[k] == predicateConstraint[k].equalTo.value);
+                }
+                else if(predicateConstraint[k].equalTo.boolOp == 'Or'){
+                    orRes = orRes | (row[k] == predicateConstraint[k].equalTo.value);
+                }
             }
         }
     }
-    return true;
+    return andRes | orRes;
 }
 
 
 function dfs(node, graphObject)
 {
-    console.log(graphObject.visited, node);
+    // console.log(graphObject.visited, node);
     graphObject.visited[node] = true;
     for(let i = 0; i < graphObject.graph[node].length; i++)
     {
@@ -445,21 +480,21 @@ function Check_Connectivity(graphObject, arrayTable)
     // Step 1 : Find the index in list_dsid_eid which corresponds to first element in arrayTable.
     // Step 2 : Call DFS function from that index to update the visited array in graphObject. 
     // Step 3 : check if all the dsid_eid in arrayTable are visited in the dfs call from previous step. 
-    console.log(arrayTable);
+    // console.log(arrayTable);
     let start_node = -1;
     for(let i = 0; i < list_dsid_eid.length; i++)
     {
-        console.log(list_dsid_eid[i]);
-        console.log([arrayTable[0].dsID, arrayTable[0].eID]);
+        // console.log(list_dsid_eid[i]);
+        // console.log([arrayTable[0].dsID, arrayTable[0].eID]);
         if(list_dsid_eid[i][0] == arrayTable[0].dsID && list_dsid_eid[i][1] == arrayTable[0].eID)
         {
             start_node = i;
             break;
         }
     }
-    console.log(start_node);    
+    // console.log(start_node);    
     dfs(start_node, graphObject);
-    console.log(graphObject.visited); 
+    // console.log(graphObject.visited); 
     let flag = true;
     for(let i = 0; i < arrayTable.length; i++)
     {
@@ -472,7 +507,7 @@ function Check_Connectivity(graphObject, arrayTable)
                 break;
             }
         }
-        console.log(i, find_index);
+        // console.log(i, find_index);
         if(graphObject.visited[find_index] == false)
             return false;
         
@@ -493,7 +528,7 @@ function CreateGraphObject()
         for(let j = i + 1; j < list_dsid_eid.length; j++)
         {
             let tmp = GetCommonAtt(list_dsid_eid[i],list_dsid_eid[j]);
-            console.log(tmp);
+            // console.log(tmp);
             if(tmp[0].length > 0)
             {
                 graph[i].push(j);
@@ -501,10 +536,10 @@ function CreateGraphObject()
             }
         }
     }
-    console.log(graph);
+    // console.log(graph);
     graphObject = {"graph" : graph};  
     graphObject.visited = new Array(graphObject.graph.length).fill(false);
-    console.log(graphObject);
+    // console.log(graphObject);
     return graphObject;  
 }
 
@@ -523,15 +558,12 @@ function DecidePermutation(arrayTable, graphObject)
                 break;
             }
         }
-        console.assert(idx != -1, "Assertion failed");
+        // console.assert(idx != -1, "Assertion failed");
         ar[i] = idx;
     }
-    console.log(ar);
+    // console.log(ar);
     return ar;
 }
-
-
-
 
 async function JoinTable(tbl1, tbl2, commonAbb1, commonAbb2){
     var qry = 'SELECT * FROM ? a, ? b where (';
@@ -544,26 +576,10 @@ async function JoinTable(tbl1, tbl2, commonAbb1, commonAbb2){
     }
     qry += ')';
 
-    console.log(qry, tbl1, tbl2);
+    // console.log(qry, tbl1, tbl2);
     var res = alasql(qry,[tbl1,tbl2]);
-    console.log(res);
+    // console.log(res);
     return res;
-}
-
-async function Temp(){
-    document.getElementById('tableDisplayDiv').innerHTML = "";
-    var lsText = await get_local_schema("dsid2","eid1");
-    var ls = get_XML_Dom_object(lsText);
-
-    var tb1 = await ProcessCSV(ls, "eid2");
-    var tb2 = await ProcessCSV(ls, "eid3");
-
-    var commonAtt = GetCommonAtt(["dsid2","eid2"],["dsid2","eid3"]);
-    JoinTable(tb1, tb2, commonAtt[0], commonAtt[1]);
-
-    // var res = alasql('SELECT * FROM ? a, ? b where a.route_no = b.rt_no',[tb1,tb2]);
-    
-    // JoinTable(tb1, tb2, ['route_no'], ['route_no']);
 }
 
 
@@ -601,7 +617,7 @@ async function Load_Data()
         let tmp = await get_tables(list_dsid_eid[i][0], list_dsid_eid[i][1]);
         all_data.push(tmp);
     }
-    console.log(all_data);
+    // console.log(all_data);
 }
 
 
@@ -613,7 +629,7 @@ function dfs2(node, dest, pathObject, graphObject)
     {
         return true;
     }
-    console.log(node, graphObject);
+    // console.log(node, graphObject);
     for(let i = 0; i < graphObject.graph[node].length; i++)
     {
         let v = graphObject.graph[node][i];
@@ -638,19 +654,20 @@ function find_path(u, v, graphObject)
     return pathObject.path;
 }
 
-function performJoinAll(permutation, graphObject)
+async function performJoinAll(permutation, graphObject)
 {
     let res = all_data[permutation[0]].data;
     for(let i = 1; i < permutation.length; i++)
     {
         let path = find_path(permutation[i-1], permutation[i], graphObject);
-        console.log(permutation[i-1], permutation[i], path);
+        // console.log(permutation[i-1], permutation[i], path);
         for(let j = 0; j + 1 < path.length; j++)
         {
             let common_attributes = GetCommonAtt(list_dsid_eid[path[j]], list_dsid_eid[path[j+1]]);
-            res = JoinTable(res, all_data[path[j+1]].data, common_attributes[0], common_attributes[1]);
+            res = await JoinTable(res, all_data[path[j+1]].data, common_attributes[0], common_attributes[1]);
         }
     }
+    
     return res;
 }
 
@@ -672,12 +689,12 @@ async function ProcessArrayTable(arrayTable){
     and so on.
     */
     
-    console.log(arrayTable);
+    // console.log(arrayTable);
     let graphObject = CreateGraphObject(arrayTable); // step 1
     
-    console.log(graphObject);
+    // console.log(graphObject);
     if(!(Check_Connectivity(graphObject, arrayTable))){ //  step 2
-        console.log("the current selection of tables is not possible");
+        // console.log("the current selection of tables is not possible");
         return false;
     }
     
@@ -686,18 +703,11 @@ async function ProcessArrayTable(arrayTable){
     await Load_Data(); // step 4
 
 
-    let res = performJoinAll(permutation, graphObject); // step 5
+    let res = await performJoinAll(permutation, graphObject); // step 5
 
-    console.log(res);
+    console.log(res.length);
+
     CreateTableFromJson(res);
 
-
-
-    return res;
-}
-
-function main()
-{   
-    var commonAtt = GetCommonAtt(["dsid2","eid2"],["dsid2","eid3"]);
-    console.log(commonAtt);
+    return true;
 }

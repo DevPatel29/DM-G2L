@@ -60,6 +60,15 @@
                 <name>origin</name>
                 <type>string</type>
             </attribute>
+
+            <relation>
+                <att_1>route_no</att_1>
+                <ent_1>eid2</ent_1>
+                <ds_1>dsid2</ds_1>
+                <att_2>route_no</att_2>
+                <ent_2>eid3</ent_2>
+                <ds_2>dsid2</ds_2>
+            </relation>
         </entity>
 
         <entity>
@@ -74,6 +83,135 @@
                 <name>route_no</name>
                 <type>string</type>
             </attribute>
+
+            <relation>
+                <att_1>route_no</att_1>
+                <ent_1>eid3</ent_1>
+                <ds_1>dsid2</ds_1>
+                <att_2>route_no</att_2>
+                <ent_2>eid2</ent_2>
+                <ds_2>dsid2</ds_2>
+            </relation>
         </entity>
     </global_schema>
+
+    <global_schema>
+        <global_schema_name>other_details</global_schema_name>
+        <global_schema_id>dsid3</global_schema_id>
+        <entity>
+            <ename>veh_device</ename>
+            <eid>eid1</eid>
+            <ls_path>/LS_other_details</ls_path>
+            <attribute>
+                <name>vehicle_no</name>
+                <type>string</type>
+            </attribute>
+            <attribute>
+                <name>device_id</name>
+                <type>decimal</type>
+            </attribute>
+            <attribute>
+                <name>sim_number</name>
+                <type>decimal</type>
+            </attribute>
+            <attribute>
+                <name>depot</name>
+                <type>string</type>
+            </attribute>
+
+            <relation>
+                <att_1>depot</att_1>
+                <ent_1>eid1</ent_1>
+                <ds_1>dsid3</ds_1>
+                <att_2>depot</att_2>
+                <ent_2>eid2</ent_2>
+                <ds_2>dsid3</ds_2>
+            </relation>
+
+            <relation>
+                <att_1>vehicle_no</att_1>
+                <ent_1>eid1</ent_1>
+                <ds_1>dsid3</ds_1>
+                <att_2>vehicle_no</att_2>
+                <ent_2>eid2</ent_2>
+                <ds_2>dsid3</ds_2>
+            </relation>
+
+        </entity>
+
+        <entity>
+            <ename>route_vehicle_details</ename>
+            <eid>eid2</eid>
+            <ls_path>/LS_other_details</ls_path>
+            <attribute>
+                <name>vehicle_no</name>
+                <type>string</type>
+            </attribute>
+            <attribute>
+                <name>schedule_no</name>
+                <type>string</type>
+            </attribute>
+            <attribute>
+                <name>sim_number</name>
+                <type>decimal</type>
+            </attribute>
+            <attribute>
+                <name>depot</name>
+                <type>string</type>
+            </attribute>
+
+            <relation>
+                <att_1>depot</att_1>
+                <ent_1>eid2</ent_1>
+                <ds_1>dsid3</ds_1>
+                <att_2>depot</att_2>
+                <ent_2>eid1</ent_2>
+                <ds_2>dsid3</ds_2>
+            </relation>
+
+            <relation>
+                <att_1>vehicle_no</att_1>
+                <ent_1>eid2</ent_1>
+                <ds_1>dsid3</ds_1>
+                <att_2>vehicle_no</att_2>
+                <ent_2>eid1</ent_2>
+                <ds_2>dsid3</ds_2>
+            </relation>
+
+            <relation>
+                <att_1>schedule_no</att_1>
+                <ent_1>eid2</ent_1>
+                <ds_1>dsid3</ds_1>
+                <att_2>schedule_no</att_2>
+                <ent_2>eid3</ent_2>
+                <ds_2>dsid3</ds_2>
+            </relation>
+            
+        </entity>
+
+        <entity>
+            <ename>schedule_details</ename>
+            <eid>eid3</eid>
+            <ls_path>/LS_other_details</ls_path>
+            <attribute>
+                <name>schedule_no</name>
+                <type>string</type>
+            </attribute>
+            <attribute>
+                <name>schedule_name</name>
+                <type>string</type>
+            </attribute>
+
+            <relation>
+                <att_1>schedule_no</att_1>
+                <ent_1>eid3</ent_1>
+                <ds_1>dsid3</ds_1>
+                <att_2>schedule_no</att_2>
+                <ent_2>eid2</ent_2>
+                <ds_2>dsid3</ds_2>
+            </relation>
+        </entity>
+
+    </global_schema>
+
 </data>

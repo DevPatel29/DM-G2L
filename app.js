@@ -47,6 +47,16 @@ app.get('/LS_route', (req, res) => {
     });
 });
 
+app.get('/LS_other_details', (req, res) => {
+    fs.readFile('./src/LS_other_details.xml', 'utf8', (err,data) =>{
+        if(err){
+            console.error(err);
+            return;
+        }
+        res.json({ text: data });
+    });
+});
+
 
 app.post('/csvdata-api', (req,res)=>{
     var path = req.body.path;
