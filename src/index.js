@@ -238,6 +238,7 @@ function AddPredicate(){
         constraint[relOp].value = predValue;
         predicateConstraint[pred] = constraint;
     }
+    selectedEntities.add((ddlDB.value + '-' + ddlEntities.value));
     console.log(predicateConstraint);
 }
 
